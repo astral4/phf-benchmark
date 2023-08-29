@@ -1,0 +1,12 @@
+[package]
+name = "phf-benchmark"
+version = "0.0.0"
+authors = ["astral4"]
+edition = "2021"
+description = "Benchmarks of perfect hash function algorithms"
+readme = "README.md"
+repository = "https://github.com/astral4/phf-benchmark"
+license = "GPL-3.0-or-later"
+publish = false
+
+[dependencies]
