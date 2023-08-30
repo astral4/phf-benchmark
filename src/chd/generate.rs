@@ -9,9 +9,8 @@ use super::{ChdHasher, Hashes};
 const FIXED_SEED: u64 = 42;
 const LAMBDA: usize = 5;
 
-pub(super) struct MapState {
-    pub(super) displacements: Vec<(usize, usize)>,
-    pub(super) map: Vec<usize>,
+pub(super) struct Displacements {
+    pub(super) inner: Vec<(usize, usize)>,
 }
 
 struct Bucket {
@@ -28,7 +27,7 @@ impl Bucket {
     }
 }
 
-pub(super) fn generate<T, H>(entries: &[T]) -> (H::Seed, MapState)
+pub(super) fn generate<T, H>(entries: &[T]) -> (H::Seed, Displacements)
 where
     T: Hash,
     H: ChdHasher,
@@ -46,7 +45,7 @@ where
         .expect("failed to obtain PHF")
 }
 
-fn try_generate<H: ChdHasher>(hashes: &[Hashes<H>]) -> Option<MapState> {
+fn try_generate<H: ChdHasher>(hashes: &[Hashes<H>]) -> Option<Displacements> {
     let table_len = hashes.len();
     let num_buckets = (table_len + LAMBDA - 1) / LAMBDA;
 
@@ -57,8 +56,8 @@ fn try_generate<H: ChdHasher>(hashes: &[Hashes<H>]) -> Option<MapState> {
     }
     buckets.sort_by(|a, b| Ord::cmp(&a.keys.len(), &b.keys.len()).reverse());
 
-    let mut map = vec![None; table_len];
     let mut displacements = vec![(0, 0); num_buckets];
+    let mut map = vec![false; table_len];
     let mut try_map = vec![0u64; table_len];
     let mut generation = 0;
 
@@ -73,17 +72,17 @@ fn try_generate<H: ChdHasher>(hashes: &[Hashes<H>]) -> Option<MapState> {
                         displace(hashes[key].1.as_(), hashes[key].2.as_(), d1, d2) % table_len;
                     // maybe d1.into(), d2.into() instead?
 
-                    if map[index].is_some() || try_map[index] == generation {
+                    if map[index] || try_map[index] == generation {
                         continue 'disps;
                     }
 
                     try_map[index] = generation;
-                    values_to_add.push((index, key));
+                    values_to_add.push(index);
                 }
 
                 displacements[bucket.index] = (d1, d2);
-                for (index, key) in values_to_add {
-                    map[index] = Some(key);
+                for index in values_to_add {
+                    map[index] = true;
                 }
                 continue 'buckets;
             }
@@ -91,9 +90,8 @@ fn try_generate<H: ChdHasher>(hashes: &[Hashes<H>]) -> Option<MapState> {
         return None;
     }
 
-    Some(MapState {
-        displacements,
-        map: map.into_iter().map(Option::unwrap).collect(),
+    Some(Displacements {
+        inner: displacements,
     })
 }
 

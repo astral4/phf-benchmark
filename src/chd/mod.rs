@@ -33,11 +33,11 @@ where
     fn from_iter<I: Iterator<Item = (K, V)>>(entries: I) -> Self {
         let entries: Vec<_> = entries.collect();
         let keys: Vec<_> = entries.iter().map(|entry| &entry.0).collect();
-        let (seed, state) = generate::generate::<_, H>(&keys);
+        let (seed, disps) = generate::generate::<_, H>(&keys);
 
         Self {
             seed,
-            disps: state.displacements.leak(),
+            disps: disps.inner.leak(),
             entries: entries.leak(),
         }
     }
