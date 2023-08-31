@@ -81,7 +81,7 @@ where
         let hashes = generate::hash::<_, H>(key, self.seed);
         let (d1, d2) = self.disps[hashes.0.into_usize() % self.disps.len()];
         let indices_index =
-            generate::displace::<H>(hashes.1, hashes.2, d1, d2).into_usize() % self.indices.len();
+            generate::displace(hashes.1, hashes.2, d1, d2).into_usize() % self.indices.len();
         let index = self.indices[indices_index];
         let entry = &self.entries[index];
 

@@ -79,8 +79,8 @@ where
                 generation += 1;
 
                 for &key in &bucket.keys {
-                    let index = displace::<H>(hashes[key].1, hashes[key].2, d1, d2).into_usize()
-                        % table_len;
+                    let index =
+                        displace(hashes[key].1, hashes[key].2, d1, d2).into_usize() % table_len;
 
                     if map[index].is_some() || try_map[index] == generation {
                         continue 'disps;
@@ -112,9 +112,6 @@ pub(super) fn hash<T: Hash, H: ChdHasher>(x: T, seed: H::Seed) -> Hashes<H> {
     hasher.finish_triple()
 }
 
-pub(super) fn displace<H>(f1: H::Hash, f2: H::Hash, d1: H::Hash, d2: H::Hash) -> H::Hash
-where
-    H: ChdHasher,
-{
+pub(super) fn displace<T: WrappingMul + WrappingAdd>(f1: T, f2: T, d1: T, d2: T) -> T {
     f1.wrapping_mul(&d1).wrapping_add(&f2).wrapping_add(&d2)
 }
