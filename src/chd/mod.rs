@@ -1,13 +1,13 @@
 use crate::{PhfMap, Seedable};
 use core::borrow::Borrow;
 use core::hash::Hash;
-use num_traits::{AsPrimitive, Unsigned};
+use num_traits::{AsPrimitive, Unsigned, WrappingAdd, WrappingMul, Zero};
 use rand::distributions::{Distribution, Standard};
 
 mod generate;
 
 trait ChdHasher: Seedable {
-    type Hash: Unsigned + AsPrimitive<usize>;
+    type Hash: Unsigned + AsPrimitive<usize> + Zero + WrappingMul + WrappingAdd;
 
     fn finish_triple(&self) -> Hashes<Self>;
 }
@@ -18,9 +18,9 @@ type Hashes<H> = (
     <H as ChdHasher>::Hash,
 );
 
-struct Map<K: 'static, V: 'static, H: Seedable> {
+struct Map<K: 'static, V: 'static, H: ChdHasher> {
     seed: H::Seed,
-    disps: &'static [(usize, usize)],
+    disps: &'static [(H::Hash, H::Hash)],
     entries: &'static [(K, V)],
 }
 
@@ -29,6 +29,7 @@ where
     K: Hash,
     H: ChdHasher,
     Standard: Distribution<H::Seed>,
+    usize: AsPrimitive<H::Hash>,
 {
     fn from_iter<I: Iterator<Item = (K, V)>>(entries: I) -> Self {
         let entries: Vec<_> = entries.collect();
@@ -43,7 +44,11 @@ where
     }
 }
 
-impl<K, V, H: ChdHasher> PhfMap for Map<K, V, H> {
+impl<K, V, H> PhfMap for Map<K, V, H>
+where
+    H: ChdHasher,
+    usize: AsPrimitive<H::Hash>,
+{
     type Key = K;
     type Value = V;
 
@@ -57,9 +62,9 @@ impl<K, V, H: ChdHasher> PhfMap for Map<K, V, H> {
         }
 
         let hashes = generate::hash::<_, H>(key, self.seed);
-        let (d1, d2) = self.disps[hashes.0.as_() % self.disps.len()];
-        let index = generate::displace(hashes.1.as_(), hashes.2.as_(), d1, d2) % self.entries.len();
-        // maybe d1.into(), d2.into() instead?
+        let (d1, d2) = self.disps[(hashes.0 % self.disps.len().as_()).as_()];
+        let index =
+            (generate::displace::<H>(hashes.1, hashes.2, d1, d2) % self.entries.len().as_()).as_();
         let entry = &self.entries[index];
 
         if entry.0.borrow() == key {
@@ -90,10 +95,17 @@ mod test {
     }
 
     impl Seedable for MyHasher {
+        /*
         type Seed = u64;
 
         fn new_with_seed(seed: Self::Seed) -> Self {
             Self(RandomState::with_seeds(seed, seed, seed, seed).build_hasher())
+        }
+        */
+        type Seed = (u64, u64, u64, u64);
+
+        fn new_with_seed(seed: Self::Seed) -> Self {
+            Self(RandomState::with_seeds(seed.0, seed.1, seed.2, seed.3).build_hasher())
         }
     }
 
