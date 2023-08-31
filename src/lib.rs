@@ -26,8 +26,6 @@ mod chd;
 use core::borrow::Borrow;
 use core::hash::{Hash, Hasher};
 
-use ahash as _;
-
 trait Seedable: Hasher {
     type Seed: Copy;
 

@@ -10,6 +10,8 @@ license = "GPL-3.0-or-later"
 publish = false
 
 [dependencies]
-ahash = "0.8.3"
 num-traits = "0.2.16"
-rand = { version = "0.8.5", default-features = false, features = ["std", "small_rng"] }
+rand = { version = "0.8.5", default-features = false, features = ["small_rng", "std"] }
+
+[dev-dependencies]
+ahash = "0.8.3"
