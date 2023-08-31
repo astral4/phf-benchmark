@@ -21,6 +21,7 @@ type Hashes<H> = (
 struct Map<K: 'static, V: 'static, H: ChdHasher> {
     seed: H::Seed,
     disps: &'static [(H::Hash, H::Hash)],
+    indices: &'static [usize],
     entries: &'static [(K, V)],
 }
 
@@ -34,11 +35,12 @@ where
     fn from_iter<I: Iterator<Item = (K, V)>>(entries: I) -> Self {
         let entries: Vec<_> = entries.collect();
         let keys: Vec<_> = entries.iter().map(|entry| &entry.0).collect();
-        let (seed, disps) = generate::generate::<_, H>(&keys);
+        let (seed, state) = generate::generate::<_, H>(&keys);
 
         Self {
             seed,
-            disps: disps.inner.leak(),
+            disps: state.displacements.leak(),
+            indices: state.indices.leak(),
             entries: entries.leak(),
         }
     }
@@ -63,8 +65,9 @@ where
 
         let hashes = generate::hash::<_, H>(key, self.seed);
         let (d1, d2) = self.disps[(hashes.0 % self.disps.len().as_()).as_()];
-        let index =
-            (generate::displace::<H>(hashes.1, hashes.2, d1, d2) % self.entries.len().as_()).as_();
+        let indices_index =
+            (generate::displace::<H>(hashes.1, hashes.2, d1, d2) % self.indices.len().as_()).as_();
+        let index = self.indices[indices_index];
         let entry = &self.entries[index];
 
         if entry.0.borrow() == key {
@@ -78,13 +81,16 @@ where
 #[cfg(test)]
 mod test {
     use super::{ChdHasher, Hashes, Map};
-    use crate::{PhfMap, Seedable};
+    use crate::{PhfMap, Seedable, FIXED_SEED};
     use ahash::{AHasher, RandomState};
     use core::hash::{BuildHasher, Hasher};
+    use rand::distributions::Standard;
+    use rand::rngs::SmallRng;
+    use rand::{Rng, SeedableRng};
 
-    struct MyHasher(AHasher);
+    struct CustomHasher(AHasher);
 
-    impl Hasher for MyHasher {
+    impl Hasher for CustomHasher {
         fn finish(&self) -> u64 {
             self.0.finish()
         }
@@ -94,14 +100,7 @@ mod test {
         }
     }
 
-    impl Seedable for MyHasher {
-        /*
-        type Seed = u64;
-
-        fn new_with_seed(seed: Self::Seed) -> Self {
-            Self(RandomState::with_seeds(seed, seed, seed, seed).build_hasher())
-        }
-        */
+    impl Seedable for CustomHasher {
         type Seed = (u64, u64, u64, u64);
 
         fn new_with_seed(seed: Self::Seed) -> Self {
@@ -109,7 +108,7 @@ mod test {
         }
     }
 
-    impl ChdHasher for MyHasher {
+    impl ChdHasher for CustomHasher {
         type Hash = u16;
 
         fn finish_triple(&self) -> Hashes<Self> {
@@ -122,25 +121,11 @@ mod test {
     fn entry_one() {
         const ENTRIES: [(u8, u8); 1] = [(123, 45)];
 
-        let map = Map::<_, _, MyHasher>::from_iter(ENTRIES.into_iter());
+        let map = Map::<_, _, CustomHasher>::from_iter(ENTRIES.into_iter());
 
+        assert_eq!(map.indices.len(), ENTRIES.len());
         assert_eq!(map.entries.len(), ENTRIES.len());
         assert_eq!(map.get_entry(&123), Some((&123, &45)));
-    }
-
-    #[test]
-    fn foo() {
-        const ENTRIES: [(u8, &'static str); 4] =
-            [(1, "foo"), (208, "bar"), (39, "baz"), (74, "qux")];
-
-        let map = Map::<_, _, MyHasher>::from_iter(ENTRIES.into_iter());
-
-        assert_eq!(map.entries.len(), ENTRIES.len());
-        assert_eq!(map.get_entry(&1), Some((&1, &"foo")));
-        assert_eq!(map.get_entry(&208), Some((&208, &"bar")));
-        assert_eq!(map.get_entry(&39), Some((&39, &"baz")));
-        assert_eq!(map.get_entry(&74), Some((&74, &"qux")));
-        assert_eq!(map.get_entry(&0), None);
     }
 
     #[test]
@@ -148,13 +133,31 @@ mod test {
         const ENTRIES: [(&'static str, u32); 4] =
             [("foo", 1234), ("bar", 5678), ("baz", 42424242), ("qux", 0)];
 
-        let map = Map::<_, _, MyHasher>::from_iter(ENTRIES.into_iter());
+        let map = Map::<_, _, CustomHasher>::from_iter(ENTRIES.into_iter());
 
+        assert_eq!(map.indices.len(), ENTRIES.len());
         assert_eq!(map.entries.len(), ENTRIES.len());
         assert_eq!(map.get_entry("foo"), Some((&"foo", &1234)));
         assert_eq!(map.get_entry("bar"), Some((&"bar", &5678)));
-        assert_eq!(map.get_entry("baz"), Some((&"bar", &42424242)));
+        assert_eq!(map.get_entry("baz"), Some((&"baz", &42424242)));
         assert_eq!(map.get_entry("qux"), Some((&"qux", &0)));
         assert_eq!(map.get_entry("other"), None);
+    }
+
+    #[test]
+    fn entry_many() {
+        const MAP_LENGTH: usize = 10000;
+
+        let map = Map::<u32, u32, CustomHasher>::from_iter(
+            SmallRng::seed_from_u64(FIXED_SEED)
+                .sample_iter(Standard)
+                .take(MAP_LENGTH),
+        );
+
+        assert_eq!(map.indices.len(), MAP_LENGTH);
+        assert_eq!(map.entries.len(), MAP_LENGTH);
+        for entry in map.entries {
+            assert_eq!(map.get_entry(&entry.0), Some((&entry.0, &entry.1)))
+        }
     }
 }

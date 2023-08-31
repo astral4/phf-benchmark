@@ -26,6 +26,8 @@ mod chd;
 use core::borrow::Borrow;
 use core::hash::{Hash, Hasher};
 
+const FIXED_SEED: u64 = 42;
+
 trait Seedable: Hasher {
     type Seed: Copy;
 

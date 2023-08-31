@@ -1,3 +1,4 @@
+use crate::FIXED_SEED;
 use core::hash::Hash;
 use num_traits::{AsPrimitive, WrappingAdd, WrappingMul, Zero};
 use rand::distributions::{Distribution, Standard};
@@ -6,11 +7,11 @@ use rand::{Rng, SeedableRng};
 
 use super::{ChdHasher, Hashes};
 
-const FIXED_SEED: u64 = 42;
 const LAMBDA: usize = 5;
 
-pub(super) struct Displacements<H: ChdHasher> {
-    pub(super) inner: Vec<(H::Hash, H::Hash)>,
+pub(super) struct MapState<H: ChdHasher> {
+    pub(super) displacements: Vec<(H::Hash, H::Hash)>,
+    pub(super) indices: Vec<usize>,
 }
 
 struct Bucket {
@@ -27,7 +28,7 @@ impl Bucket {
     }
 }
 
-pub(super) fn generate<T, H>(entries: &[T]) -> (H::Seed, Displacements<H>)
+pub(super) fn generate<T, H>(entries: &[T]) -> (H::Seed, MapState<H>)
 where
     T: Hash,
     H: ChdHasher,
@@ -46,7 +47,7 @@ where
         .expect("failed to obtain PHF")
 }
 
-fn try_generate<H>(hashes: &[Hashes<H>]) -> Option<Displacements<H>>
+fn try_generate<H>(hashes: &[Hashes<H>]) -> Option<MapState<H>>
 where
     H: ChdHasher,
     usize: AsPrimitive<H::Hash>,
@@ -62,7 +63,7 @@ where
     buckets.sort_by(|a, b| Ord::cmp(&a.keys.len(), &b.keys.len()).reverse());
 
     let mut displacements = vec![(H::Hash::zero(), H::Hash::zero()); num_buckets];
-    let mut map = vec![false; table_len];
+    let mut map = vec![None; table_len];
     let mut try_map = vec![0u64; table_len];
     let mut generation = 0;
     let mut values_to_add = Vec::with_capacity(LAMBDA);
@@ -78,17 +79,17 @@ where
                         % table_len.as_())
                     .as_();
 
-                    if map[index] || try_map[index] == generation {
+                    if map[index].is_some() || try_map[index] == generation {
                         continue 'disps;
                     }
 
                     try_map[index] = generation;
-                    values_to_add.push(index);
+                    values_to_add.push((index, key));
                 }
 
                 displacements[bucket.index] = (d1.as_(), d2.as_());
-                for &index in &values_to_add {
-                    map[index] = true;
+                for &(index, key) in &values_to_add {
+                    map[index] = Some(key);
                 }
                 continue 'buckets;
             }
@@ -96,8 +97,9 @@ where
         return None;
     }
 
-    Some(Displacements {
-        inner: displacements,
+    Some(MapState {
+        displacements,
+        indices: map.into_iter().map(Option::unwrap).collect(),
     })
 }
 
