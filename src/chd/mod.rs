@@ -1,13 +1,23 @@
 use crate::{PhfMap, Seedable};
+use alloc::vec::Vec;
 use core::borrow::Borrow;
 use core::hash::Hash;
+use num_traits::bounds::UpperBounded;
 use num_traits::{AsPrimitive, Unsigned, WrappingAdd, WrappingMul, Zero};
 use rand::distributions::{Distribution, Standard};
+use usize_cast::IntoUsize;
 
 mod generate;
 
 trait ChdHasher: Seedable {
-    type Hash: Unsigned + AsPrimitive<usize> + Zero + WrappingMul + WrappingAdd;
+    type Hash: 'static
+        + UpperBounded
+        + Unsigned
+        + IntoUsize
+        + Zero
+        + Copy
+        + WrappingMul
+        + WrappingAdd;
 
     fn finish_triple(&self) -> Hashes<Self>;
 }
@@ -34,6 +44,12 @@ where
 {
     fn from_iter<I: Iterator<Item = (K, V)>>(entries: I) -> Self {
         let entries: Vec<_> = entries.collect();
+
+        assert!(
+            entries.len() <= H::Hash::max_value().into_usize(),
+            "cannot have more entries than possible hash values"
+        );
+
         let keys: Vec<_> = entries.iter().map(|entry| &entry.0).collect();
         let (seed, state) = generate::generate::<_, H>(&keys);
 
@@ -49,7 +65,6 @@ where
 impl<K, V, H> PhfMap for Map<K, V, H>
 where
     H: ChdHasher,
-    usize: AsPrimitive<H::Hash>,
 {
     type Key = K;
     type Value = V;
@@ -64,9 +79,9 @@ where
         }
 
         let hashes = generate::hash::<_, H>(key, self.seed);
-        let (d1, d2) = self.disps[(hashes.0 % self.disps.len().as_()).as_()];
+        let (d1, d2) = self.disps[hashes.0.into_usize() % self.disps.len()];
         let indices_index =
-            (generate::displace::<H>(hashes.1, hashes.2, d1, d2) % self.indices.len().as_()).as_();
+            generate::displace::<H>(hashes.1, hashes.2, d1, d2).into_usize() % self.indices.len();
         let index = self.indices[indices_index];
         let entry = &self.entries[index];
 

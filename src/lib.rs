@@ -20,9 +20,11 @@
     unused_tuple_struct_fields
 )]
 #![allow(clippy::module_name_repetitions)]
+#![cfg_attr(not(test), no_std)]
 
 mod chd;
 
+extern crate alloc;
 use core::borrow::Borrow;
 use core::hash::{Hash, Hasher};
 

@@ -1,9 +1,12 @@
 use crate::FIXED_SEED;
+use alloc::vec;
+use alloc::vec::Vec;
 use core::hash::Hash;
 use num_traits::{AsPrimitive, WrappingAdd, WrappingMul, Zero};
 use rand::distributions::{Distribution, Standard};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
+use usize_cast::IntoUsize;
 
 use super::{ChdHasher, Hashes};
 
@@ -38,7 +41,7 @@ where
     SmallRng::seed_from_u64(FIXED_SEED)
         .sample_iter(Standard)
         .find_map(|seed| {
-            let hashes: Box<_> = entries
+            let hashes: Vec<_> = entries
                 .iter()
                 .map(|entry| hash::<_, H>(entry, seed))
                 .collect();
@@ -58,7 +61,7 @@ where
     let mut buckets: Vec<_> = (0..num_buckets).map(Bucket::new).collect();
 
     for (i, hash) in hashes.iter().enumerate() {
-        buckets[(hash.0 % num_buckets.as_()).as_()].keys.push(i);
+        buckets[hash.0.into_usize() % num_buckets].keys.push(i);
     }
     buckets.sort_by(|a, b| Ord::cmp(&a.keys.len(), &b.keys.len()).reverse());
 
@@ -76,9 +79,8 @@ where
                 generation += 1;
 
                 for &key in &bucket.keys {
-                    let index = (displace::<H>(hashes[key].1, hashes[key].2, d1, d2)
-                        % table_len.as_())
-                    .as_();
+                    let index = displace::<H>(hashes[key].1, hashes[key].2, d1, d2).into_usize()
+                        % table_len;
 
                     if map[index].is_some() || try_map[index] == generation {
                         continue 'disps;
@@ -103,14 +105,6 @@ where
         indices: map.into_iter().map(Option::unwrap).collect(),
     })
 }
-
-/*
-fn hash<T: Hash + ?Sized, H: ChdHasher>(x: &T, seed: H::Seed) -> Hashes<H> {
-    let mut hasher = H::new_with_seed(seed);
-    x.hash(&mut hasher);
-    hasher.finish_triple()
-}
-*/
 
 pub(super) fn hash<T: Hash, H: ChdHasher>(x: T, seed: H::Seed) -> Hashes<H> {
     let mut hasher = H::new_with_seed(seed);
