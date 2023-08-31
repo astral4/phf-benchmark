@@ -71,11 +71,12 @@ where
     'buckets: for bucket in &buckets {
         for d1 in 0..table_len {
             'disps: for d2 in 0..table_len {
+                let (d1, d2) = (d1.as_(), d2.as_());
                 values_to_add.clear();
                 generation += 1;
 
                 for &key in &bucket.keys {
-                    let index = (displace::<H>(hashes[key].1, hashes[key].2, d1.as_(), d2.as_())
+                    let index = (displace::<H>(hashes[key].1, hashes[key].2, d1, d2)
                         % table_len.as_())
                     .as_();
 
@@ -87,7 +88,7 @@ where
                     values_to_add.push((index, key));
                 }
 
-                displacements[bucket.index] = (d1.as_(), d2.as_());
+                displacements[bucket.index] = (d1, d2);
                 for &(index, key) in &values_to_add {
                     map[index] = Some(key);
                 }
