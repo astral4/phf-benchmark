@@ -33,9 +33,12 @@ use phf_shared::{PhfMap, Seedable};
 use rand::distributions::{Distribution, Standard};
 use usize_cast::IntoUsize;
 
+#[cfg(test)]
+use ahash as _;
+
 mod generate;
 
-trait ChdHasher: Seedable {
+pub trait ChdHasher: Seedable {
     type Hash: 'static
         + UpperBounded
         + Unsigned
@@ -48,17 +51,17 @@ trait ChdHasher: Seedable {
     fn finish_triple(&self) -> Hashes<Self>;
 }
 
-type Hashes<H> = (
+pub type Hashes<H> = (
     <H as ChdHasher>::Hash,
     <H as ChdHasher>::Hash,
     <H as ChdHasher>::Hash,
 );
 
-struct Map<K: 'static, V: 'static, H: ChdHasher> {
-    seed: H::Seed,
-    disps: &'static [(H::Hash, H::Hash)],
-    indices: &'static [usize],
-    entries: &'static [(K, V)],
+pub struct Map<K: 'static, V: 'static, H: ChdHasher> {
+    pub seed: H::Seed,
+    pub disps: &'static [(H::Hash, H::Hash)],
+    pub indices: &'static [usize],
+    pub entries: &'static [(K, V)],
 }
 
 impl<K, V, H> Map<K, V, H>
@@ -68,7 +71,7 @@ where
     Standard: Distribution<H::Seed>,
     usize: AsPrimitive<H::Hash>,
 {
-    fn from_iter<I: Iterator<Item = (K, V)>>(entries: I) -> Self {
+    pub fn from_iter<I: Iterator<Item = (K, V)>>(entries: I) -> Self {
         let entries: Vec<_> = entries.collect();
 
         assert!(
@@ -115,91 +118,6 @@ where
             Some((&entry.0, &entry.1))
         } else {
             None
-        }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::{ChdHasher, Hashes, Map};
-    use crate::{PhfMap, Seedable};
-    use ahash::{AHasher, RandomState};
-    use core::hash::{BuildHasher, Hasher};
-    use phf_shared::FIXED_SEED;
-    use rand::distributions::Standard;
-    use rand::rngs::SmallRng;
-    use rand::{Rng, SeedableRng};
-
-    struct CustomHasher(AHasher);
-
-    impl Hasher for CustomHasher {
-        fn finish(&self) -> u64 {
-            self.0.finish()
-        }
-
-        fn write(&mut self, bytes: &[u8]) {
-            self.0.write(bytes)
-        }
-    }
-
-    impl Seedable for CustomHasher {
-        type Seed = (u64, u64, u64, u64);
-
-        fn new_with_seed(seed: Self::Seed) -> Self {
-            Self(RandomState::with_seeds(seed.0, seed.1, seed.2, seed.3).build_hasher())
-        }
-    }
-
-    impl ChdHasher for CustomHasher {
-        type Hash = u16;
-
-        fn finish_triple(&self) -> Hashes<Self> {
-            let output = self.0.finish();
-            ((output >> 32) as u16, (output >> 16) as u16, output as u16)
-        }
-    }
-
-    #[test]
-    fn entry_one() {
-        const ENTRIES: [(u8, u8); 1] = [(123, 45)];
-
-        let map = Map::<_, _, CustomHasher>::from_iter(ENTRIES.into_iter());
-
-        assert_eq!(map.indices.len(), ENTRIES.len());
-        assert_eq!(map.entries.len(), ENTRIES.len());
-        assert_eq!(map.get_entry(&123), Some((&123, &45)));
-    }
-
-    #[test]
-    fn entry_multiple() {
-        const ENTRIES: [(&'static str, u32); 4] =
-            [("foo", 1234), ("bar", 5678), ("baz", 42424242), ("qux", 0)];
-
-        let map = Map::<_, _, CustomHasher>::from_iter(ENTRIES.into_iter());
-
-        assert_eq!(map.indices.len(), ENTRIES.len());
-        assert_eq!(map.entries.len(), ENTRIES.len());
-        assert_eq!(map.get_entry("foo"), Some((&"foo", &1234)));
-        assert_eq!(map.get_entry("bar"), Some((&"bar", &5678)));
-        assert_eq!(map.get_entry("baz"), Some((&"baz", &42424242)));
-        assert_eq!(map.get_entry("qux"), Some((&"qux", &0)));
-        assert_eq!(map.get_entry("other"), None);
-    }
-
-    #[test]
-    fn entry_many() {
-        const MAP_LENGTH: usize = 10000;
-
-        let map = Map::<u32, u32, CustomHasher>::from_iter(
-            SmallRng::seed_from_u64(FIXED_SEED)
-                .sample_iter(Standard)
-                .take(MAP_LENGTH),
-        );
-
-        assert_eq!(map.indices.len(), MAP_LENGTH);
-        assert_eq!(map.entries.len(), MAP_LENGTH);
-        for entry in map.entries {
-            assert_eq!(map.get_entry(&entry.0), Some((&entry.0, &entry.1)))
         }
     }
 }

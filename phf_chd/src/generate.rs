@@ -12,9 +12,9 @@ use super::{ChdHasher, Hashes};
 
 const LAMBDA: usize = 5;
 
-pub(super) struct MapState<H: ChdHasher> {
-    pub(super) displacements: Vec<(H::Hash, H::Hash)>,
-    pub(super) indices: Vec<usize>,
+pub(crate) struct MapState<H: ChdHasher> {
+    pub(crate) displacements: Vec<(H::Hash, H::Hash)>,
+    pub(crate) indices: Vec<usize>,
 }
 
 struct Bucket {
@@ -31,7 +31,7 @@ impl Bucket {
     }
 }
 
-pub(super) fn generate<T, H>(entries: &[T]) -> (H::Seed, MapState<H>)
+pub(crate) fn generate<T, H>(entries: &[T]) -> (H::Seed, MapState<H>)
 where
     T: Hash,
     H: ChdHasher,
@@ -106,12 +106,12 @@ where
     })
 }
 
-pub(super) fn hash<T: Hash, H: ChdHasher>(x: T, seed: H::Seed) -> Hashes<H> {
+pub(crate) fn hash<T: Hash, H: ChdHasher>(x: T, seed: H::Seed) -> Hashes<H> {
     let mut hasher = H::new_with_seed(seed);
     x.hash(&mut hasher);
     hasher.finish_triple()
 }
 
-pub(super) fn displace<T: WrappingMul + WrappingAdd>(f1: T, f2: T, d1: T, d2: T) -> T {
+pub(crate) fn displace<T: WrappingMul + WrappingAdd>(f1: T, f2: T, d1: T, d2: T) -> T {
     f1.wrapping_mul(&d1).wrapping_add(&f2).wrapping_add(&d2)
 }
