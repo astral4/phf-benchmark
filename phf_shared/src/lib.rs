@@ -3,6 +3,7 @@
     let_underscore_drop,
     macro_use_extern_crate,
     meta_variable_misuse,
+    missing_abi,
     non_ascii_idents,
     nonstandard_style,
     noop_method_call,
@@ -22,21 +23,18 @@
 #![allow(clippy::module_name_repetitions)]
 #![cfg_attr(not(test), no_std)]
 
-mod chd;
-
-extern crate alloc;
 use core::borrow::Borrow;
 use core::hash::{Hash, Hasher};
 
-const FIXED_SEED: u64 = 42;
+pub const FIXED_SEED: u64 = 42;
 
-trait Seedable: Hasher {
+pub trait Seedable: Hasher {
     type Seed: Copy;
 
     fn new_with_seed(seed: Self::Seed) -> Self;
 }
 
-trait PhfMap {
+pub trait PhfMap {
     type Key;
     type Value;
 

@@ -1,9 +1,35 @@
-use crate::{PhfMap, Seedable};
+#![warn(clippy::pedantic, future_incompatible, unused)]
+#![deny(
+    let_underscore_drop,
+    macro_use_extern_crate,
+    meta_variable_misuse,
+    missing_abi,
+    non_ascii_idents,
+    nonstandard_style,
+    noop_method_call,
+    rust_2018_idioms,
+    trivial_casts,
+    trivial_numeric_casts,
+    unreachable_pub,
+    unsafe_op_in_unsafe_fn,
+    unused_crate_dependencies,
+    unused_import_braces,
+    unused_lifetimes,
+    unused_macro_rules,
+    unused_qualifications,
+    unused_results,
+    unused_tuple_struct_fields
+)]
+#![allow(clippy::module_name_repetitions)]
+#![cfg_attr(not(test), no_std)]
+
+extern crate alloc;
 use alloc::vec::Vec;
 use core::borrow::Borrow;
 use core::hash::Hash;
 use num_traits::bounds::UpperBounded;
 use num_traits::{AsPrimitive, Unsigned, WrappingAdd, WrappingMul, Zero};
+use phf_shared::{PhfMap, Seedable};
 use rand::distributions::{Distribution, Standard};
 use usize_cast::IntoUsize;
 
@@ -96,9 +122,10 @@ where
 #[cfg(test)]
 mod test {
     use super::{ChdHasher, Hashes, Map};
-    use crate::{PhfMap, Seedable, FIXED_SEED};
+    use crate::{PhfMap, Seedable};
     use ahash::{AHasher, RandomState};
     use core::hash::{BuildHasher, Hasher};
+    use phf_shared::FIXED_SEED;
     use rand::distributions::Standard;
     use rand::rngs::SmallRng;
     use rand::{Rng, SeedableRng};

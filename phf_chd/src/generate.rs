@@ -1,8 +1,8 @@
-use crate::FIXED_SEED;
 use alloc::vec;
 use alloc::vec::Vec;
 use core::hash::Hash;
 use num_traits::{AsPrimitive, WrappingAdd, WrappingMul, Zero};
+use phf_shared::FIXED_SEED;
 use rand::distributions::{Distribution, Standard};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
