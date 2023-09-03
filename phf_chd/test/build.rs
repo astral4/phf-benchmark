@@ -21,19 +21,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     write!(
         &mut file,
-        "const ENTRY_ONE: Map<u8, u8, AHasher> = {};",
+        "const MAP_ONE: Map<u8, u8, AHasher> = {};",
         MapGenerator::<_, _, AHasher>::from(ENTRY_ONE.into_iter())
     )?;
 
     write!(
         &mut file,
-        "const ENTRY_MULTIPLE: Map<&'static str, u32, AHasher> = {};",
+        "const MAP_MULTIPLE: Map<&'static str, u32, AHasher> = {};",
         MapGenerator::<_, _, AHasher>::from(ENTRY_MULTIPLE.into_iter())
     )?;
 
     write!(
         &mut file,
-        "const ENTRY_MANY: Map<u32, u32, AHasher> = {};",
+        "const MAP_MANY: Map<u32, u32, AHasher> = {};",
         MapGenerator::<u32, u32, AHasher>::from(
             SmallRng::seed_from_u64(FIXED_SEED)
                 .sample_iter(Standard)
