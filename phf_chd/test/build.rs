@@ -33,6 +33,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     write!(
         &mut file,
+        "const MAP_ARRAYS: Map<[u8; 100], f32, AHasher> = {};",
+        MapGenerator::<[u8; 100], f32, AHasher>::from(
+            SmallRng::seed_from_u64(FIXED_SEED)
+                .sample_iter(Standard)
+                .take(1000)
+        )
+    )?;
+
+    write!(
+        &mut file,
         "const MAP_MANY: Map<u32, u32, AHasher> = {};",
         MapGenerator::<u32, u32, AHasher>::from(
             SmallRng::seed_from_u64(FIXED_SEED)

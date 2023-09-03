@@ -22,10 +22,19 @@ fn map_multiple() {
 }
 
 #[test]
+fn map_arrays() {
+    assert_eq!(MAP_ARRAYS.entries.len(), 1000);
+
+    for entry in MAP_ARRAYS.entries {
+        assert_eq!(MAP_ARRAYS.get_entry(&entry.0), Some((&entry.0, &entry.1)));
+    }
+}
+
+#[test]
 fn map_many() {
     assert_eq!(MAP_MANY.entries.len(), 10000);
 
     for entry in MAP_MANY.entries {
-        assert_eq!(MAP_MANY.get_entry(&entry.0), Some((&entry.0, &entry.1)))
+        assert_eq!(MAP_MANY.get_entry(&entry.0), Some((&entry.0, &entry.1)));
     }
 }
