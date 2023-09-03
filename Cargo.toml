@@ -1,5 +1,5 @@
 [workspace]
-members = ["phf_chd", "phf_shared"]
+members = ["phf_chd", "phf_chd/test", "phf_shared"]
 resolver = "2"
 
 [workspace.package]
@@ -9,3 +9,6 @@ edition = "2021"
 repository = "https://github.com/astral4/phf-benchmark"
 license = "GPL-3.0-or-later"
 publish = false
+
+[workspace.dependencies]
+rand = { version = "0.8.5", default-features = false, features = ["alloc", "small_rng"] }

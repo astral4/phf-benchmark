@@ -11,5 +11,5 @@ publish.workspace = true
 [dependencies]
 num-traits = "0.2.16"
 phf_shared = { path = "../phf_shared" }
-rand = { version = "0.8.5", default-features = false, features = ["alloc", "small_rng"] }
+rand.workspace = true
 usize_cast = "1.1.0"

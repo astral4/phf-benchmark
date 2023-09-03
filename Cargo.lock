@@ -85,6 +85,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "phf_chd_test"
+version = "0.0.0"
+dependencies = [
+ "phf_chd",
+ "phf_shared",
+]
+
+[[package]]
 name = "phf_shared"
 version = "0.0.0"
 dependencies = [
