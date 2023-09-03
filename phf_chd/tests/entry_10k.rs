@@ -1,17 +1,15 @@
 use phf_chd::Map;
+use phf_shared::hash::AHasher;
 use phf_shared::{PhfMap, FIXED_SEED};
 use rand::distributions::Standard;
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 
-mod shared;
-use shared::CustomHasher;
-
 #[test]
 fn entry_many() {
     const MAP_LENGTH: usize = 10000;
 
-    let map = Map::<u32, u32, CustomHasher>::from_iter(
+    let map = Map::<u32, u32, AHasher>::from_iter(
         SmallRng::seed_from_u64(FIXED_SEED)
             .sample_iter(Standard)
             .take(MAP_LENGTH),

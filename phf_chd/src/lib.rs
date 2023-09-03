@@ -26,15 +26,13 @@
 extern crate alloc;
 use alloc::vec::Vec;
 use core::borrow::Borrow;
-use core::hash::Hash;
+use core::hash::{Hash, Hasher};
 use num_traits::bounds::UpperBounded;
 use num_traits::{AsPrimitive, Unsigned, WrappingAdd, WrappingMul, Zero};
+use phf_shared::hash::AHasher;
 use phf_shared::{PhfMap, Seedable};
 use rand::distributions::{Distribution, Standard};
 use usize_cast::IntoUsize;
-
-#[cfg(test)]
-use ahash as _;
 
 mod generate;
 
@@ -56,6 +54,15 @@ pub type Hashes<H> = (
     <H as ChdHasher>::Hash,
     <H as ChdHasher>::Hash,
 );
+
+impl ChdHasher for AHasher {
+    type Hash = u16;
+
+    fn finish_triple(&self) -> Hashes<Self> {
+        let output = self.finish();
+        ((output >> 32) as u16, (output >> 16) as u16, output as u16)
+    }
+}
 
 pub struct Map<K: 'static, V: 'static, H: ChdHasher> {
     pub seed: H::Seed,

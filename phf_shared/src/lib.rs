@@ -30,6 +30,8 @@ use core::hash::{Hash, Hasher};
 use core::iter::zip;
 use hashbrown::HashSet;
 
+pub mod hash;
+
 pub const FIXED_SEED: u64 = 42;
 
 pub trait Seedable: Hasher {
