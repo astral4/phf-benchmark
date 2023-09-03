@@ -1,0 +1,18 @@
+[package]
+name = "phf_chd_test"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description = "Tests for the phf_chd crate"
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+phf_chd = { path = "../" }
+phf_shared = { path = "../../phf_shared" }
+
+[build-dependencies]
+phf_chd = { path = "../" }
+phf_shared = { path = "../../phf_shared" }
+rand.workspace = true

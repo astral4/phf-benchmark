@@ -26,11 +26,12 @@
 extern crate alloc;
 use alloc::vec::Vec;
 use core::borrow::Borrow;
+use core::fmt::{Debug, Display, Formatter, Result as FmtResult};
 use core::hash::{Hash, Hasher};
 use num_traits::bounds::UpperBounded;
 use num_traits::{AsPrimitive, Unsigned, WrappingAdd, WrappingMul, Zero};
 use phf_shared::hash::AHasher;
-use phf_shared::{PhfMap, Seedable};
+use phf_shared::{has_duplicates, PhfMap, Seedable};
 use rand::distributions::{Distribution, Standard};
 use usize_cast::IntoUsize;
 
@@ -64,22 +65,23 @@ impl ChdHasher for AHasher {
     }
 }
 
-pub struct Map<K: 'static, V: 'static, H: ChdHasher> {
-    pub seed: H::Seed,
-    pub disps: &'static [(H::Hash, H::Hash)],
-    pub indices: &'static [usize],
-    pub entries: &'static [(K, V)],
+pub struct MapGenerator<K, V, H: ChdHasher> {
+    seed: H::Seed,
+    disps: Vec<(H::Hash, H::Hash)>,
+    indices: Vec<usize>,
+    entries: Vec<(K, V)>,
 }
 
-impl<K, V, H> Map<K, V, H>
+impl<K, V, H, I> From<I> for MapGenerator<K, V, H>
 where
-    K: Hash,
+    K: Eq + Hash,
     H: ChdHasher,
+    I: Iterator<Item = (K, V)>,
     Standard: Distribution<H::Seed>,
     usize: AsPrimitive<H::Hash>,
 {
-    pub fn from_iter<I: Iterator<Item = (K, V)>>(entries: I) -> Self {
-        let entries: Vec<_> = entries.collect();
+    fn from(value: I) -> Self {
+        let entries: Vec<_> = value.collect();
 
         assert!(
             entries.len() <= H::Hash::max_value().into_usize(),
@@ -87,15 +89,49 @@ where
         );
 
         let keys: Vec<_> = entries.iter().map(|entry| &entry.0).collect();
+
+        assert!(!has_duplicates(&keys), "duplicate key present");
+
         let (seed, state) = generate::generate::<_, H>(&keys);
 
         Self {
             seed,
-            disps: state.displacements.leak(),
-            indices: state.indices.leak(),
-            entries: entries.leak(),
+            disps: state.displacements,
+            indices: state.indices,
+            entries,
         }
     }
+}
+
+impl<K, V, H> Display for MapGenerator<K, V, H>
+where
+    K: Debug,
+    V: Debug,
+    H: ChdHasher,
+    H::Seed: Debug,
+    H::Hash: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.write_fmt(format_args!(
+            "::phf_chd::Map {{\
+                seed: {:?},\
+                disps: &{:?},\
+                entries: &[",
+            &self.seed, &self.disps
+        ))?;
+
+        for &index in &self.indices {
+            f.write_fmt(format_args!("{:?},", &self.entries[index]))?;
+        }
+
+        f.write_str("]}")
+    }
+}
+
+pub struct Map<K: 'static, V: 'static, H: ChdHasher> {
+    pub seed: H::Seed,
+    pub disps: &'static [(H::Hash, H::Hash)],
+    pub entries: &'static [(K, V)],
 }
 
 impl<K, V, H> PhfMap for Map<K, V, H>
@@ -116,9 +152,8 @@ where
 
         let hashes = generate::hash::<_, H>(key, self.seed);
         let (d1, d2) = self.disps[hashes.0.into_usize() % self.disps.len()];
-        let indices_index =
-            generate::displace(hashes.1, hashes.2, d1, d2).into_usize() % self.indices.len();
-        let index = self.indices[indices_index];
+        let index =
+            generate::displace(hashes.1, hashes.2, d1, d2).into_usize() % self.entries.len();
         let entry = &self.entries[index];
 
         if entry.0.borrow() == key {
