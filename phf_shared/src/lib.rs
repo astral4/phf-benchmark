@@ -23,8 +23,12 @@
 #![allow(clippy::module_name_repetitions)]
 #![cfg_attr(not(test), no_std)]
 
+extern crate alloc;
+use alloc::vec::Vec;
 use core::borrow::Borrow;
 use core::hash::{Hash, Hasher};
+use core::iter::zip;
+use hashbrown::HashSet;
 
 pub const FIXED_SEED: u64 = 42;
 
@@ -42,4 +46,33 @@ pub trait PhfMap {
     where
         T: Eq + Hash + ?Sized,
         Self::Key: Borrow<T>;
+}
+
+pub struct MapBuilder<K, V> {
+    keys: HashSet<K>,
+    values: Vec<V>,
+}
+
+impl<K, V> MapBuilder<K, V>
+where
+    K: Eq + Hash,
+{
+    pub fn new_with_capacity(capacity: usize) -> Self {
+        Self {
+            keys: HashSet::with_capacity(capacity),
+            values: Vec::with_capacity(capacity),
+        }
+    }
+
+    pub fn entry(&mut self, key: K, value: V) -> &mut Self {
+        if !self.keys.insert(key) {
+            panic!("duplicate key inserted");
+        }
+        self.values.push(value);
+        self
+    }
+
+    pub fn finish(self) -> Vec<(K, V)> {
+        zip(self.keys, self.values).collect()
+    }
 }
