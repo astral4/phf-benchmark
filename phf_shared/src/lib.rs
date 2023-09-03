@@ -52,9 +52,9 @@ pub fn has_duplicates<T: Eq + Hash>(items: &[T]) -> bool {
 
     for item in items {
         if !set.insert(item) {
-            return false;
+            return true;
         }
     }
 
-    true
+    false
 }
