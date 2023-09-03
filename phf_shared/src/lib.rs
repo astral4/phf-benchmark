@@ -24,11 +24,12 @@
 #![cfg_attr(not(test), no_std)]
 
 extern crate alloc;
+use ahash::RandomState;
 use alloc::vec::Vec;
 use core::borrow::Borrow;
 use core::hash::{Hash, Hasher};
 use core::iter::zip;
-use hashbrown::HashSet;
+use indexmap::IndexSet;
 
 pub mod hash;
 
@@ -51,7 +52,7 @@ pub trait PhfMap {
 }
 
 pub struct MapBuilder<K, V> {
-    keys: HashSet<K>,
+    keys: IndexSet<K, RandomState>,
     values: Vec<V>,
 }
 
@@ -61,7 +62,7 @@ where
 {
     pub fn new_with_capacity(capacity: usize) -> Self {
         Self {
-            keys: HashSet::with_capacity(capacity),
+            keys: IndexSet::with_capacity_and_hasher(capacity, RandomState::new()), // HashSet::with_capacity(capacity),
             values: Vec::with_capacity(capacity),
         }
     }
