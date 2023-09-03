@@ -17,7 +17,7 @@ impl Hasher for AHasher {
 impl Seedable for AHasher {
     type Seed = (u64, u64, u64, u64);
 
-    fn new_with_seed(seed: Self::Seed) -> Self {
+    fn new_with_seed(seed: &Self::Seed) -> Self {
         Self(RandomState::with_seeds(seed.0, seed.1, seed.2, seed.3).build_hasher())
     }
 }

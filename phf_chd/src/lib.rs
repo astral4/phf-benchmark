@@ -150,7 +150,7 @@ where
             return None;
         }
 
-        let hashes = generate::hash::<_, H>(key, self.seed);
+        let hashes = generate::hash::<_, H>(key, &self.seed);
         let (d1, d2) = self.disps[hashes.0.into_usize() % self.disps.len()];
         let index =
             generate::displace(hashes.1, hashes.2, d1, d2).into_usize() % self.entries.len();

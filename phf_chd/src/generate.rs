@@ -43,7 +43,7 @@ where
         .find_map(|seed| {
             let hashes: Vec<_> = entries
                 .iter()
-                .map(|entry| hash::<_, H>(entry, seed))
+                .map(|entry| hash::<_, H>(entry, &seed))
                 .collect();
             try_generate::<H>(&hashes).map(|s| (seed, s))
         })
@@ -106,7 +106,7 @@ where
     })
 }
 
-pub(crate) fn hash<T: Hash, H: ChdHasher>(x: T, seed: H::Seed) -> Hashes<H> {
+pub(crate) fn hash<T: Hash, H: ChdHasher>(x: T, seed: &H::Seed) -> Hashes<H> {
     let mut hasher = H::new_with_seed(seed);
     x.hash(&mut hasher);
     hasher.finish_triple()

@@ -32,9 +32,9 @@ pub mod hash;
 pub const FIXED_SEED: u64 = 42;
 
 pub trait Seedable: Hasher {
-    type Seed: Copy;
+    type Seed;
 
-    fn new_with_seed(seed: Self::Seed) -> Self;
+    fn new_with_seed(seed: &Self::Seed) -> Self;
 }
 
 pub trait PhfMap {
