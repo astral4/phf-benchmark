@@ -23,13 +23,9 @@
 #![allow(clippy::module_name_repetitions)]
 #![cfg_attr(not(test), no_std)]
 
-extern crate alloc;
-use ahash::RandomState;
-use alloc::vec::Vec;
 use core::borrow::Borrow;
 use core::hash::{Hash, Hasher};
-use core::iter::zip;
-use indexmap::IndexSet;
+use hashbrown::HashSet;
 
 pub mod hash;
 
@@ -51,31 +47,14 @@ pub trait PhfMap {
         Self::Key: Borrow<T>;
 }
 
-pub struct MapBuilder<K, V> {
-    keys: IndexSet<K, RandomState>,
-    values: Vec<V>,
-}
+pub fn has_duplicates<T: Eq + Hash>(items: &[T]) -> bool {
+    let mut set = HashSet::with_capacity(items.len());
 
-impl<K, V> MapBuilder<K, V>
-where
-    K: Eq + Hash,
-{
-    pub fn new_with_capacity(capacity: usize) -> Self {
-        Self {
-            keys: IndexSet::with_capacity_and_hasher(capacity, RandomState::new()), // HashSet::with_capacity(capacity),
-            values: Vec::with_capacity(capacity),
+    for item in items {
+        if !set.insert(item) {
+            return false;
         }
     }
 
-    pub fn entry(&mut self, key: K, value: V) -> &mut Self {
-        if !self.keys.insert(key) {
-            panic!("duplicate key inserted");
-        }
-        self.values.push(value);
-        self
-    }
-
-    pub fn finish(self) -> Vec<(K, V)> {
-        zip(self.keys, self.values).collect()
-    }
+    true
 }

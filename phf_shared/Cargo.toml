@@ -10,4 +10,4 @@ publish.workspace = true
 
 [dependencies]
 ahash = { version = "0.8.3", default-features = false, features = ["runtime-rng"] }
-indexmap = { version = "2.0.0", default-features = false }
+hashbrown = "0.14.0"
