@@ -1,5 +1,5 @@
 [workspace]
-members = ["phf_chd", "phf_chd/test", "phf_shared"]
+members = ["phf_benchmark", "phf_chd", "phf_chd/test", "phf_shared"]
 resolver = "2"
 
 [workspace.package]
