@@ -12,3 +12,9 @@ publish = false
 
 [workspace.dependencies]
 rand = { version = "0.8.5", default-features = false, features = ["alloc", "min_const_gen", "small_rng"] }
+
+[profile.bench]
+strip = true
+lto = true
+panic = "abort"
+codegen-units = 1
