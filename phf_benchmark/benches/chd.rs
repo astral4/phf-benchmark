@@ -16,7 +16,7 @@ fn eval_chd(c: &mut Criterion) {
     group.bench_function("eval_chd_1k", |b| {
         b.iter_batched(
             || samples.next().unwrap(),
-            |x| black_box(MAP_CHD_1K.get_entry(black_box(&x))),
+            |x| black_box(MAP_CHD_1K.get_entry(&x)),
             BatchSize::SmallInput,
         )
     });
@@ -24,7 +24,7 @@ fn eval_chd(c: &mut Criterion) {
     group.bench_function("eval_chd_10k", |b| {
         b.iter_batched(
             || samples.next().unwrap(),
-            |x| black_box(MAP_CHD_10K.get_entry(black_box(&x))),
+            |x| black_box(MAP_CHD_10K.get_entry(&x)),
             BatchSize::SmallInput,
         )
     });
