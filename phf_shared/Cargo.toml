@@ -1,0 +1,13 @@
+[package]
+name = "phf_shared"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description = "Common items used by PHF algorithm implementations"
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+ahash = { version = "0.8.3", default-features = false, features = ["runtime-rng"] }
+hashbrown = "0.14.0"

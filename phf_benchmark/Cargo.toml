@@ -1,0 +1,26 @@
+[package]
+name = "phf_benchmark"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description = "Benchmarks of PHF algorithm implementations"
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+phf_chd = { path = "../phf_chd" }
+phf_shared = { path = "../phf_shared" }
+
+[dev-dependencies]
+criterion = "0.5.1"
+rand.workspace = true
+
+[build-dependencies]
+phf_chd = { path = "../phf_chd" }
+phf_shared = { path = "../phf_shared" }
+rand.workspace = true
+
+[[bench]]
+name = "chd"
+harness = false

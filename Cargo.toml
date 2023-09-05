@@ -1,12 +1,20 @@
-[package]
-name = "phf-benchmark"
+[workspace]
+members = ["phf_benchmark", "phf_chd", "phf_chd/test", "phf_shared"]
+resolver = "2"
+
+[workspace.package]
 version = "0.0.0"
 authors = ["astral4"]
 edition = "2021"
-description = "Benchmarks of perfect hash function algorithms"
-readme = "README.md"
 repository = "https://github.com/astral4/phf-benchmark"
 license = "GPL-3.0-or-later"
 publish = false
 
-[dependencies]
+[workspace.dependencies]
+rand = { version = "0.8.5", default-features = false, features = ["alloc", "min_const_gen", "small_rng"] }
+
+[profile.bench]
+strip = true
+lto = true
+panic = "abort"
+codegen-units = 1

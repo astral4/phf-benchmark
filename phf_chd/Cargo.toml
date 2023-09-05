@@ -1,0 +1,15 @@
+[package]
+name = "phf_chd"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+description = "Implementation of the CHD PHF algorithm"
+repository.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+num-traits = "0.2.16"
+phf_shared = { path = "../phf_shared" }
+rand.workspace = true
+usize_cast = "1.1.0"
