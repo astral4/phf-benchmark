@@ -1,3 +1,4 @@
+use super::{ChdHasher, Hashes};
 use alloc::vec;
 use alloc::vec::Vec;
 use core::hash::Hash;
@@ -7,8 +8,6 @@ use rand::distributions::{Distribution, Standard};
 use rand::rngs::SmallRng;
 use rand::{Rng, SeedableRng};
 use usize_cast::IntoUsize;
-
-use super::{ChdHasher, Hashes};
 
 const LAMBDA: usize = 5;
 
