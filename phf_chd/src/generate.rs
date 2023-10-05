@@ -55,7 +55,7 @@ where
     usize: AsPrimitive<H::Hash>,
 {
     let table_len = hashes.len();
-    let num_buckets = (table_len + LAMBDA - 1) / LAMBDA;
+    let num_buckets = table_len.div_ceil(LAMBDA);
 
     let mut buckets: Vec<_> = (0..num_buckets).map(Bucket::new).collect();
 
