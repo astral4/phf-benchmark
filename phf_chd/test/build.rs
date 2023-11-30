@@ -12,12 +12,12 @@ use std::path::Path;
 
 const ENTRY_ONE: [(u8, u8); 1] = [(123, 45)];
 
-const ENTRY_MULTIPLE: [(&'static str, u32); 4] =
+const ENTRY_MULTIPLE: [(&str, u32); 4] =
     [("foo", 1234), ("bar", 5678), ("baz", 42424242), ("qux", 0)];
 
 fn main() -> Result<(), Box<dyn Error>> {
     let path = Path::new(&var("OUT_DIR")?).join("codegen.rs");
-    let mut file = BufWriter::new(File::create(&path)?);
+    let mut file = BufWriter::new(File::create(path)?);
 
     write!(
         &mut file,

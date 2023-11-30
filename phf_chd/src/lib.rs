@@ -59,6 +59,7 @@ pub type Hashes<H> = (
 impl ChdHasher for AHasher {
     type Hash = u16;
 
+    #[allow(clippy::cast_possible_truncation)]
     fn finish_triple(&self) -> Hashes<Self> {
         let output = self.finish();
         ((output >> 32) as u16, (output >> 16) as u16, output as u16)

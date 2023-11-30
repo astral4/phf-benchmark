@@ -12,7 +12,7 @@ use std::path::Path;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let path = Path::new(&var("OUT_DIR")?).join("codegen.rs");
-    let mut file = BufWriter::new(File::create(&path)?);
+    let mut file = BufWriter::new(File::create(path)?);
 
     for size in [1000, 10000] {
         write!(
