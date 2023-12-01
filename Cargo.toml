@@ -6,7 +6,7 @@ resolver = "2"
 version = "0.0.0"
 authors = ["astral4"]
 edition = "2021"
-repository = "https://github.com/astral4/phf-benchmark"
+repository = "https://github.com/astral4/phf-sandbox"
 license = "GPL-3.0-or-later"
 publish = false
 

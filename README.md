@@ -1,4 +1,4 @@
-# PHF algorithm benchmarks
+# PHF sandbox
 
 The goal of this project is to:
 - implement various perfect hash function algorithms in Rust, and
