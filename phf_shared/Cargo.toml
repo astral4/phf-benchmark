@@ -9,5 +9,8 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-ahash = { version = "0.8.9", default-features = false, features = ["runtime-rng"] }
-hashbrown = "0.14.3"
+ahash = { version = "0.8.11", default-features = false, features = ["runtime-rng"] }
+hashbrown = "0.14.5"
+
+[lints]
+workspace = true

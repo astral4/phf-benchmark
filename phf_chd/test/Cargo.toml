@@ -16,3 +16,6 @@ phf_shared = { path = "../../phf_shared" }
 phf_chd = { path = "../" }
 phf_shared = { path = "../../phf_shared" }
 rand.workspace = true
+
+[lints]
+workspace = true

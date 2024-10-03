@@ -21,6 +21,9 @@ phf_chd = { path = "../phf_chd" }
 phf_shared = { path = "../phf_shared" }
 rand.workspace = true
 
+[lints]
+workspace = true
+
 [[bench]]
 name = "chd"
 harness = false
